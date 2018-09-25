@@ -7,3 +7,39 @@
     text-align: center;
 }
 
+.matched {
+    background-color: green;
+    border-color: green;
+    color: white;
+}
+
+.hidden {
+    background-color: grey;
+    border-color: grey;
+    color: white;
+}
+
+.visible {
+    background-color: blue;
+    border-color: blue;
+    color: white;
+}
+
+.tile {
+    border-radius: 10px;
+    margin: 10px;
+    height: 80px;
+    width: 65px;
+    position: relative;
+}
+
+.tile-text {
+    top: 50%;
+    left: 50%;
+    position: absolute;
+    transform: translate(-50%, -50%);
+}
+
+#score-text{
+    width: 80px;
+}

@@ -24,7 +24,7 @@ class Memory extends React.Component {
         let list_of_pairs = list_of_tiles.concat(list_of_tiles);
         let tiles = this.randomizeTiles(list_of_pairs);
         let visibility_pairs = tiles.map((x) =>
-         {return {value: x, visible: false}})
+         {return { value: x, visible: false, matched: false }})
 
         this.state = {
             // Represents the board state
@@ -32,9 +32,13 @@ class Memory extends React.Component {
 
             // Number of tiles clicked
             score: 0,
+
             // Temporary store for index of the first clicked tile
             // in the data array.
             firstClicked: null,
+
+            // Stores if game has been won
+            gameWon: false
         };
 
         this.incrementScore = this.incrementScore.bind(this);
@@ -46,11 +50,13 @@ class Memory extends React.Component {
     restart() {
         let shuffled_tiles = this.randomizeTiles(this.state.board);
         let reset_tiles = shuffled_tiles.map((x) =>
-            {return { value: x.value, visible: false }});
+            {return { value: x.value, visible: false, matched: false }});
 
         this.setState({ board: reset_tiles,
-                        score: 0, first,
-                        firstClicked: null });
+                        score: 0,
+                        firstClicked: null,
+                        gameWon: false,
+                     });
     }
 
     /**
@@ -102,19 +108,23 @@ class Memory extends React.Component {
              // If this is the second click, show the tile
              this.setState({ board: board_copy });
 
-             let first_click = this.state.firstClicked;
+             let first_click = board_copy[this.state.firstClicked];
 
              // Check if both tiles have matching values
              if (first_click.value == this_click.value) {
-                this.checkWin();
+                 first_click.matched = true;
+                 this_click.matched = true;
+                 this.setState({ board: board_copy })
+
+                 this.checkWin();
 
              } else {
 
                  // If the tiles do not match, hide them after 1 seconds,
                  // and remove the stored first click value.
                  let hide_tiles = () => {
-                     board_copy[index] = false;
-                     board_copy[first_click] = false;
+                     this_click.visible = false;
+                     first_click.visible = false;
                      this.setState({ board: board_copy })
                  };
                  setTimeout(hide_tiles, 1000);
@@ -134,11 +144,11 @@ class Memory extends React.Component {
       */
      checkWin() {
          // If they do, check if all tiles are visable
-         if (this.state.board.every((x) => x.revealed)) {
+         if (this.state.board.every((tile) => tile.visible)) {
              // If they are, alert the uer the won
              // Delayed as board does not update as fast as the alert
              // would go off. This allows the user to see all tiles.
-             setTimeout(() => alert("You WIN!"), 100);
+             this.setState({ gameWon: true })
          }
      }
 
@@ -148,20 +158,29 @@ class Memory extends React.Component {
      */
     render() {
         // Generate the list of tiles
-        console.log("Render");
+        if (this.state.gameWon)
+            return <div className="column">
 
-        return <div className="column">
-
-            <h1>Memory Game!</h1>
-            <Board
-                board={ this.state.board }
-                checkMatch={ this.checkMatch.bind(this) }
-                key="gameBoard"/>
-            <div className="row">
-                <p>Score: { this.state.score }</p>
-                <button onClick={() => this.restart()}>Restart Game</button>
+                <h1>Memory Game!</h1>
+                <h2>You Won in {this.state.score} clicks</h2>
+                <div className="row">
+                    <button onClick={() => this.restart()}>Restart Game</button>
+                </div>
             </div>
-        </div>
+        else {
+            return <div className="column">
+
+                <h1>Memory Game!</h1>
+                <Board
+                    board={ this.state.board }
+                    checkMatch={ this.checkMatch.bind(this) }
+                    key="gameBoard"/>
+                <div className="row">
+                    <p id="score-text">Score: { this.state.score }</p>
+                    <button onClick={() => this.restart()}>Restart Game</button>
+                </div>
+            </div>
+        }
     }
 }
 
@@ -173,7 +192,6 @@ class Memory extends React.Component {
   * @return {type}       HTML to render for a <Board/>
   */
 function Board(props) {
-    console.log(props);
     // Generates the HTML for a 4 x 4 game board.
     let board = [];
     for (var i = 0; i < 4; i++) {
@@ -181,8 +199,10 @@ function Board(props) {
 
         for (var k = 0; k < 4; k++) {
             let index = i * 4 + k;
-            row.push(<Tile value={ props.board[index].value }
-                           revealed={ props.board[index].visible }
+            let tile = props.board[index]
+            row.push(<Tile value={ tile.value }
+                           visible={ tile.visible }
+                           matched={ tile.matched }
                            handleClick={ (x) => props.checkMatch(x) }
                            index={ index }
                            key={ index }/>);
@@ -207,11 +227,19 @@ function Tile(props) {
     let display = String.fromCharCode(97 + props.value);
 
     // If the tile has been revealed, show its value and disable clicking on it
-    if (props.revealed) {
-        return <button>{display}</button>;
+    if (props.matched) {
+        return <div className="matched tile">
+            <p className="tile-text">{ display }</p>
+        </div>;
+    } else if (props.visible) {
+        return <div className="visible tile">
+            <p className="tile-text">{ display }</p>
+        </div>
     } else {
         // Otherwise, hide the value (show a '?') and propogate clicks up to the
         // handleClick function of the board
-        return <button onClick={() => props.handleClick(props.index)}>?</button>;
+        return <div className="hidden tile" onClick={() => props.handleClick(props.index)}>
+            <p className="tile-text">?</p>
+        </div>;
     }
 }
