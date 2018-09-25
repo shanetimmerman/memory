@@ -22,26 +22,26 @@ class Starter extends React.Component {
   }
 
   render() {
-    let button = <div className="column" onMouseMove={this.swap.bind(this)}>
-      <p><button onClick={this.hax.bind(this)}>Click Me</button></p>
-    </div>;
-
-    let blank = <div className="column">
-      <p>Nothing here.</p>
-    </div>;
-
-    if (this.state.left) {
-      return <div className="row">
-        {button}
-        {blank}
-      </div>;
-    }
-    else {
-      return <div className="row">
-        {blank}
-        {button}
-      </div>;
-    }
+    return <div>Hello</div>
+    // let button = <div className="column" onMouseMove={this.swap.bind(this)}>
+    //   <p><button onClick={this.hax.bind(this)}>Click Me</button></p>
+    // </div>;
+    //
+    // let blank = <div className="column">
+    //   <p>Nothing here.</p>
+    // </div>;
+    //
+    // if (this.state.left) {
+    //   return <div className="row">
+    //     {button}
+    //     {blank}
+    //   </div>;
+    // }
+    // else {
+    //   return <div className="row">
+    //     {blank}
+    //     {button}
+    //   </div>;
+    // }
   }
 }
-
