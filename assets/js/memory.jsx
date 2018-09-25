@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import _ from 'lodash';
 
 export default function game_init(root) {
     ReactDOM.render(<Memory/>, root);
@@ -20,15 +21,16 @@ class Memory extends React.Component {
     constructor(props) {
         super(props);
 
-        let list_of_tiles = [...Array(8).keys()];
-        let list_of_pairs = list_of_tiles.concat(list_of_tiles);
-        let tiles = this.randomizeTiles(list_of_pairs);
-        let visibility_pairs = tiles.map((x) =>
-         {return { value: x, visible: false, matched: false }})
+        // Maes a list of
+        let zeroToSeven = [...Array(8).keys()];
+        let list_of_pairs = zeroToSeven.concat(zeroToSeven);
+        let shuffled = _.shuffle(list_of_pairs);
+        let shuffled_tiles = shuffled.map((value) =>
+          {return { value: value, visible: false, matched: false }})
 
         this.state = {
             // Represents the board state
-            board: visibility_pairs,
+            board: shuffled_tiles,
 
             // Number of tiles clicked
             score: 0,
@@ -38,7 +40,9 @@ class Memory extends React.Component {
             firstClicked: null,
 
             // Stores if game has been won
-            gameWon: false
+            gameWon: false,
+
+            inTimeout: false,
         };
 
         this.incrementScore = this.incrementScore.bind(this);
@@ -48,7 +52,7 @@ class Memory extends React.Component {
      * Shuffles and hide all tiles, sets score back to 0.
      */
     restart() {
-        let shuffled_tiles = this.randomizeTiles(this.state.board);
+        let shuffled_tiles = _.shuffle(this.state.board);
         let reset_tiles = shuffled_tiles.map((x) =>
             {return { value: x.value, visible: false, matched: false }});
 
@@ -57,18 +61,6 @@ class Memory extends React.Component {
                         firstClicked: null,
                         gameWon: false,
                      });
-    }
-
-    /**
-     * randomizeTiles - Randomizes the ordering of an array
-     *
-     * @param  {Array} arr array to shuffle
-     * @return {Array}     Shuffled array
-     */
-    randomizeTiles(arr) {
-        return arr.sort(function (t1, t2) {
-            return 0.5 - Math.random()
-        });
     }
 
      /**
@@ -94,6 +86,12 @@ class Memory extends React.Component {
       * @return {type}       Void
       */
      checkMatch(index) {
+         // If the game is still displaying the previous selection, then do not
+         // allow the user to select any tiles
+         if (this.state.inTimeout) {
+             return;
+         }
+
          // Bubbles up the click to the Game
          this.incrementScore();
 
@@ -119,13 +117,13 @@ class Memory extends React.Component {
                  this.checkWin();
 
              } else {
-
+                 this.setState({ inTimeout: true });
                  // If the tiles do not match, hide them after 1 seconds,
                  // and remove the stored first click value.
                  let hide_tiles = () => {
                      this_click.visible = false;
                      first_click.visible = false;
-                     this.setState({ board: board_copy })
+                     this.setState({ board: board_copy, inTimeout: false });
                  };
                  setTimeout(hide_tiles, 1000);
              }
@@ -158,18 +156,17 @@ class Memory extends React.Component {
      */
     render() {
         // Generate the list of tiles
-        if (this.state.gameWon)
+        if (this.state.gameWon) {
             return <div className="column">
-
                 <h1>Memory Game!</h1>
                 <h2>You Won in {this.state.score} clicks</h2>
+                <img id="blerner" src="https://www.ccis.northeastern.edu/wp-content/uploads/2016/02/Benjamin-Lerner-index-image-e1456779237510.jpg" />
                 <div className="row">
                     <button onClick={() => this.restart()}>Restart Game</button>
                 </div>
             </div>
-        else {
+        } else {
             return <div className="column">
-
                 <h1>Memory Game!</h1>
                 <Board
                     board={ this.state.board }
@@ -177,7 +174,7 @@ class Memory extends React.Component {
                     key="gameBoard"/>
                 <div className="row">
                     <p id="score-text">Score: { this.state.score }</p>
-                    <button onClick={() => this.restart()}>Restart Game</button>
+                    <button onClick={ this.restart.bind(this) }>Restart Game</button>
                 </div>
             </div>
         }
@@ -239,7 +236,7 @@ function Tile(props) {
         // Otherwise, hide the value (show a '?') and propogate clicks up to the
         // handleClick function of the board
         return <div className="hidden tile" onClick={() => props.handleClick(props.index)}>
-            <p className="tile-text">?</p>
+            <p className="hidden-text">?</p>
         </div>;
     }
 }
