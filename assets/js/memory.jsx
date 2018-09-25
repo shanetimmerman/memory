@@ -5,6 +5,10 @@ export default function game_init(root) {
     ReactDOM.render(<Memory/>, root);
 }
 
+function hideTiles() {
+  this.setState({ revealed: this.state.revealed.map( (x) => false) });
+}
+
 class Memory extends React.Component {
   constructor(props) {
     super(props);
@@ -20,6 +24,7 @@ class Memory extends React.Component {
 
   restart() {
     this.setState({ tiles: this.randomizeTiles(this.state.tiles) });
+    hideTiles();
   }
 
   randomizeTiles(arr) {
@@ -35,7 +40,7 @@ class Memory extends React.Component {
     return <div className="column">
 
       <h1>Memory Game!</h1>
-      <Board tiles={ this.state.tiles } key="gameBoard" />
+      <Board tiles={ this.state.tiles } reset={ hideTiles } key="gameBoard" />
       <button onClick={() => this.restart()}>Restart Game</button>
     </div>
   }
@@ -51,6 +56,7 @@ class Board extends React.Component {
             firstClicked: null,
         };
 
+        hideTiles = this.props.reset.bind(this);
         this.checkMatch = this.checkMatch.bind(this)
     }
 
