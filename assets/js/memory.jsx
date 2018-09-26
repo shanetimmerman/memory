@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import _ from 'lodash';
 
+import css from "../css/memory.css";
+
 export default function game_init(root) {
     ReactDOM.render(<Memory/>, root);
 }
@@ -42,10 +44,11 @@ class Memory extends React.Component {
             // Stores if game has been won
             gameWon: false,
 
+            // When true, interaction with board is halted until set
             inTimeout: false,
+            // back to false
         };
 
-        this.incrementScore = this.incrementScore.bind(this);
     }
 
     /**
@@ -95,8 +98,11 @@ class Memory extends React.Component {
          // Bubbles up the click to the Game
          this.incrementScore();
 
+         // Makes a copy of the board so we only change this.state by setState
          let board_copy = this.state.board;
          let this_click = board_copy[index];
+
+         // Sets the most recently clicked tile to be visible
          this_click.visible = true;
 
          if (this.state.firstClicked == null) {
@@ -110,6 +116,8 @@ class Memory extends React.Component {
 
              // Check if both tiles have matching values
              if (first_click.value == this_click.value) {
+
+                // Set the property of both tiles to have matched be true
                  first_click.matched = true;
                  this_click.matched = true;
                  this.setState({ board: board_copy })
@@ -142,7 +150,7 @@ class Memory extends React.Component {
       */
      checkWin() {
          // If they do, check if all tiles are visable
-         if (this.state.board.every((tile) => tile.visible)) {
+         if (this.state.board.every((tile) => tile.matched)) {
              // If they are, alert the uer the won
              // Delayed as board does not update as fast as the alert
              // would go off. This allows the user to see all tiles.
@@ -162,7 +170,7 @@ class Memory extends React.Component {
                 <h2>You Won in {this.state.score} clicks</h2>
                 <img id="blerner" src="https://www.ccis.northeastern.edu/wp-content/uploads/2016/02/Benjamin-Lerner-index-image-e1456779237510.jpg" />
                 <div className="row">
-                    <button onClick={() => this.restart()}>Restart Game</button>
+                    <button onClick={ this.restart.bind(this)}>Restart Game</button>
                 </div>
             </div>
         } else {
