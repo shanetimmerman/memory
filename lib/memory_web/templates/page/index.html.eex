@@ -1,3 +1,8 @@
-<div id="root">
-  React app loading...
+<div class="row">
+    <div class="column">
+        <h1>Hangman Game:</h1>
+        <div id="index_base">
+          React component loading...
+        </div>
+    </div>
 </div>
