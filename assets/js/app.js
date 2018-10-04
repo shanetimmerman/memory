@@ -21,11 +21,10 @@ function start() {
     let root = document.getElementById('root');
     let index_base = document.getElementById('index_base');
     if (root) {
-       let channel = socket.channel("games:" + window.getName, {});
+        let channel = socket.channel("games:" + window.gameName, {});
 
         game_init(root, channel);
     } else if (index_base) {
-        console.log('nice');
         index_init(index_base);
     }
 }

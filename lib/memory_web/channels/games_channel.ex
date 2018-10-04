@@ -4,14 +4,12 @@ defmodule MemoryWeb.GamesChannel do
   alias Memory.Game
   alias Memory.BackupAgent
 
-#  TODO incorporate GenServer
-
   def join("games:" <> name, payload, socket) do
     if authorized?(payload) do
       game = BackupAgent.get(name) || Game.new()
       socket = socket
       |> assign(:game, game)
-      |> assign(:name, game)
+      |> assign(:name, name)
       BackupAgent.put(name, game)
       {:ok, %{"join" => name,
               "game" => Game.client_view(game)
@@ -27,7 +25,6 @@ defmodule MemoryWeb.GamesChannel do
     socket = assign(socket, :game, game)
     BackupAgent.put(name, game)
     {:reply, {:ok, %{ "game" => Game.client_view(game)}}, socket}
-#    TODO : add flipback
   end
 
   def handle_in("reset", _, socket) do

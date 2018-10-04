@@ -18,7 +18,7 @@ function Index(props) {
 function to_game() {
     let game_name = document.getElementById("game_input").value;
     if (game_name) {
+        game_name = encodeURI(game_name);
         document.location.href = "/game/" + game_name;
-        console.log("yep");
     }
 }
