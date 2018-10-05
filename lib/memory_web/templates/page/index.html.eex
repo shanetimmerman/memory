@@ -1,6 +1,6 @@
 <div class="row">
     <div class="column">
-        <h1>Hangman Game:</h1>
+        <h1>Memory Game:</h1>
         <div id="index_base">
           React component loading...
         </div>

@@ -1,7 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import _ from 'lodash';
-
 import css from "../css/memory.css";
 
 export default function game_init(root, channel) {
@@ -15,7 +13,7 @@ export default function game_init(root, channel) {
  */
 class Memory extends React.Component {
     /**
-     * Cunstructs the react component for game_init
+     * Constructs the react component for game_init
      *
      * Initializes list of tile
      * @param props
@@ -33,21 +31,37 @@ class Memory extends React.Component {
             game_won: false,
         };
 
-        this.channel = props.channel;
         this.interactable = true;
 
+        // Channel interactions and functions piping information inspired by in class hangman examples
+        // (https://github.com/NatTuck/hangman)
+
+        this.channel = props.channel;
+
         this.channel.join()
-            .receive("ok", this.gotView.bind(this))
+            .receive("ok", this.updateView.bind(this))
             .receive("error", resp => { console.log("Unable to join", resp) });
     }
 
-    gotView(view) {
+    /**
+     * Update the view when the game is updated
+     *
+     * @param view: updated view to display
+     */
+    updateView(view) {
         this.setState(view.game);
     }
 
+    /**
+     * Before updating the view, checks if any cards need to be flipped back
+     * If any do, sets them to be flipped back after 1 second
+     *
+     * @param view: updated view to display
+     */
     gotClickResult(view) {
-        this.gotView(view);
+        this.updateView(view);
         if (view.game.need_flip_back) {
+
             this.interactable = false;
             setTimeout(() => {
                 this.sendFlipBack();
@@ -56,6 +70,11 @@ class Memory extends React.Component {
         }
     }
 
+    /**
+     * On click, sends the server the index of the tile and updates
+     * view based on the result
+     * @param index: Tile index
+     */
     sendClick(index) {
         if (this.interactable) {
             this.channel.push("click", { index: index })
@@ -63,14 +82,20 @@ class Memory extends React.Component {
         }
     }
 
+    /**
+     * Resests the game on the server
+     */
     sendReset() {
         this.channel.push("reset")
-            .receive("ok", this.gotView.bind(this));
+            .receive("ok", this.updateView.bind(this));
     }
 
-    sendFlipBack(index) {
-        this.channel.push("flip_back", { index: index })
-            .receive("ok", this.gotView.bind(this));
+    /**
+     * Sends message to flip over selected tiles
+     */
+    sendFlipBack() {
+        this.channel.push("flip_back")
+            .receive("ok", this.updateView.bind(this));
     }
 
     /**
