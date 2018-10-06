@@ -52,6 +52,5 @@ let socket = new Socket("/socket", {params: {token: window.userToken}});
 //     end
 //
 // Finally, connect to the socket:
-socket.connect();
 
 export default socket

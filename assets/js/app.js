@@ -22,6 +22,7 @@ function start() {
     let root = document.getElementById('root');
     let index_base = document.getElementById('index_base');
     if (root) {
+        socket.connect()
         let channel = socket.channel("games:" + window.gameName, {});
 
         game_init(root, channel);
