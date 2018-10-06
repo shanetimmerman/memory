@@ -10,45 +10,40 @@ defmodule Memory.GameServer do
     GenServer.call(__MODULE__, {:view, game, user})
   end
 
-  def flip_back(id) do
-    call_genserver(id, :flip_back)
+  def flip_back(game, user) do
+    GenServer.call(__MODULE__, {:flip_back, game, user})
   end
 
-  def click(id, index) do
-    call_genserver(id, {:click, index})
+  def click(game, user, index) do
+    GenServer.call(__MODULE__, {:click, game, user, index})
   end
 
-  def reset(id) do
-    call_genserver(id, :reset)
-  end
-
-  defp call_genserver(id, data) do
-    {_, state, _} = GenServer.call(reg(id), data)
-    {:ok, state}
+  def reset(game, user) do
+    GenServer.call(__MODULE__, {:reset, game, user})
   end
 
   # Server (callbacks)
-
-  #@impl true
-  def init(state) do
-    {:ok, state}
-  end
-  
-  def handle_call({:click, index}, state) do
-    f = fn(game) -> Game.click(game, index) end
-    handle_call_gen(state, f)
+  ## Implementations
+  def handle_call({:view, game, user}, _from, state) do
+    gg = Map.get(state, game, Game.new)
+    {:reply, Game.client_view(gg, user), Map.put(game, gg)}
   end
 
-  def handle_call(:flip_back, state) do
-    handle_call_gen(state, &Game.flip_back/1)
+  def handle_call({:click, game, user, index}, _from, state) do
+    gg = Map.get(state, game, Game.new)
+         |> Game.click(user, index)
+    {:reply, Game.client_view(gg, user), Map.put(game, gg)}
   end
 
-  def handle_call(:reset, state) do
-    handle_call_gen(state, &Game.reset/1)
+  def handle_call({:flip_back, game, user}, _from, state) do
+    gg = Map.get(state, game, Game.new)
+         |> Game.flip_back(user)
+    {:reply, Game.client_view(gg, user), Map.put(game, gg)}
   end
-  
-  defp handle_call_gen(state, f) do
-    game = f.(state)
-    {:reply, Game.client_view(game), game}
+
+  def handle_call({:reset, game, user}, _from, state) do
+    gg = Map.get(state, game, Game.new)
+         |> Game.reset(user, index)
+    {:reply, Game.client_view(gg, user), Map.put(game, gg)}
   end
 end

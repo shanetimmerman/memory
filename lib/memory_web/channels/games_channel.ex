@@ -7,45 +7,34 @@ defmodule MemoryWeb.GamesChannel do
 
   # join and handle_in functions inspired by those used in in-class
   # hangman example (https://github.com/NatTuck/hangman)
-  def join("games:" <> name, payload, socket) do
-    if authorized?(payload) do
-      MemGenServer.setup()
-      MemGenServer.start(name)
 
-      game = BackupAgent.get(name) || Game.new()
-      socket = socket
-      |> assign(:game, game)
-      |> assign(:name, name)
-      BackupAgent.put(name, game)
-      {:ok, %{"join" => name,
-              "game" =>  Game.client_view(game)
-             }, socket}
+
+  def join("games:" <> game, payload, socket) do
+    if authorized?(payload) do
+      socket = assign(socket, :game, game)
+      view = GameServer.view(game, socket.assigns[:user])
+      {:ok, %{"join" => game, "game" => view}, socket}
     else
       {:error, %{reason: "unauthorized"}}
     end
   end
 
-  # Each of these functions propagates call to internal
-  # Game class and return a JSON with the view
   def handle_in("click", %{"index" => index}, socket) do
-    f = fn(game) -> MemGenServer.click(game, index) end
-    handle(socket, f)
-  end
-
-  def handle_in("reset", _, socket) do
-    handle(socket, &MemGenServer.reset/1)
+    view = GameServer.guess(socket.assigns[:game], socket.assigns[:user], index)
+    {:reply, {:ok, %{ "game" => view}}, socket}
   end
 
   def handle_in("flip_back", _, socket) do
-    handle(socket, &MemGenServer.flip_back/1)
+    view = GameServer.flip_back(socket.assigns[:game], socket.assigns[:user])
+    {:reply, {:ok, %{ "game" => view}}, socket}
   end
 
-  defp handle(socket, f) do
-    name = socket.assigns[:name]
-    {:reply, f.(name), socket}
+  def handle_in("reset", _, socket) do
+    view = GameServer.reset(socket.assigns[:game], socket.assigns[:user])
+    {:reply, {:ok, %{ "game" => view}}, socket}
   end
 
-#  # Each of these functions propagates call to internal
+  #  # Each of these functions propagates call to internal
 #  # Game class and return a JSON with the view
 #  def handle_in("click", %{"index" => index}, socket) do
 #    f = fn(game) -> Game.click(game, index) end
