@@ -3,7 +3,7 @@ defmodule MemoryWeb.GamesChannel do
 
 #  alias Memory.Game
 #  alias Memory.BackupAgent
-  alias Memory.MemGenServer
+  alias Memory.GameServer
 
   # join and handle_in functions inspired by those used in in-class
   # hangman example (https://github.com/NatTuck/hangman)
@@ -20,7 +20,7 @@ defmodule MemoryWeb.GamesChannel do
   end
 
   def handle_in("click", %{"index" => index}, socket) do
-    view = GameServer.guess(socket.assigns[:game], socket.assigns[:user], index)
+    view = GameServer.click(socket.assigns[:game], socket.assigns[:user], index)
     {:reply, {:ok, %{ "game" => view}}, socket}
   end
 

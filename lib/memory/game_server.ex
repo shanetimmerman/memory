@@ -26,24 +26,24 @@ defmodule Memory.GameServer do
   ## Implementations
   def handle_call({:view, game, user}, _from, state) do
     gg = Map.get(state, game, Game.new)
-    {:reply, Game.client_view(gg, user), Map.put(game, gg)}
+    {:reply, Game.client_view(gg, user), Map.put(state, game, gg)}
   end
 
   def handle_call({:click, game, user, index}, _from, state) do
     gg = Map.get(state, game, Game.new)
          |> Game.click(user, index)
-    {:reply, Game.client_view(gg, user), Map.put(game, gg)}
+    {:reply, Game.client_view(gg, user), Map.put(state, game, gg)}
   end
 
   def handle_call({:flip_back, game, user}, _from, state) do
     gg = Map.get(state, game, Game.new)
          |> Game.flip_back(user)
-    {:reply, Game.client_view(gg, user), Map.put(game, gg)}
+    {:reply, Game.client_view(gg, user), Map.put(state, game, gg)}
   end
 
   def handle_call({:reset, game, user}, _from, state) do
     gg = Map.get(state, game, Game.new)
-         |> Game.reset(user, index)
-    {:reply, Game.client_view(gg, user), Map.put(game, gg)}
+         |> Game.reset(user)
+    {:reply, Game.client_view(gg, user), Map.put(state, game, gg)}
   end
 end
