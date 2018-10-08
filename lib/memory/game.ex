@@ -70,7 +70,8 @@ defmodule Memory.Game do
     if (user_turn == 1 || user_turn == 2) do
       false
     else
-      true
+      # true
+      false ## TODO to be changed
     end
   end
 
@@ -124,11 +125,15 @@ defmodule Memory.Game do
     new()
   end
 
-  def flip_back(game) do
+  def flip_back(game, player) do
     board = game.board
     updated_board = Enum.map(board, fn {val, status} -> hide?(val, status) end)
 
+    plyr = Map.get(game, player, init_player())
+    |> Map.put(:turn, nil)
+
     Map.put(game, :board, updated_board)
+    |> Map.update(:players, %{}, &(Map.put(&1, player, plyr)))
   end
 
   defp game_won?(board) do

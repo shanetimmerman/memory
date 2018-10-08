@@ -24,6 +24,11 @@ defmodule Memory.GameServer do
 
   # Server (callbacks)
   ## Implementations
+
+  def init(state) do
+    {:ok, state}
+  end
+
   def handle_call({:view, game, user}, _from, state) do
     gg = Map.get(state, game, Game.new)
     {:reply, Game.client_view(gg, user), Map.put(state, game, gg)}

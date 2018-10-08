@@ -29,6 +29,7 @@ class Memory extends React.Component {
             score: 0,
 
             game_won: false,
+            players: [],
         };
 
         this.interactable = true;
@@ -150,7 +151,7 @@ function Board(props) {
                            key={ index }/>);
         }
 
-        board.push(<div className="row"> {row}</div>);
+        board.push(<div className="row" key={"row"+i}> {row}</div>);
     }
 
     return <div className="column"> {board} </div>
