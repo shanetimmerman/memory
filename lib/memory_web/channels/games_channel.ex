@@ -19,13 +19,10 @@ defmodule MemoryWeb.GamesChannel do
 
   def handle_in("click", %{"index" => index}, socket) do
     view = GameServer.click(socket.assigns[:game], socket.assigns[:user], index)
-    broadcast(socket, "update_state", view)
-#    if view.need_flip_back do
-#      view = GameServer.flip_back(socket.assigns[:game], socket.assigns[:user])
-##      IO.inspect view, label: "Post flip"
-##      broadcast(socket, "update_state", view)
-#    end
+
     IO.inspect view, label: "The current state is"
+
+    broadcast(socket, "update_state", view)
     {:noreply, socket}
 
   end
@@ -33,7 +30,9 @@ defmodule MemoryWeb.GamesChannel do
   def handle_in("reset", _, socket) do
     view = GameServer.reset(socket.assigns[:game], socket.assigns[:user])
     broadcast(socket, "update_state", view)
+
     IO.inspect view, label: "The current state is"
+
     {:noreply, socket}
   end
 

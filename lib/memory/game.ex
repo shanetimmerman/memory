@@ -50,7 +50,7 @@ defmodule Memory.Game do
   end
 
   def click(game, player, index) do
-    if is_not_turn(game, player) || game.waiting_for_flip_back? do
+    if is_not_turn(game, player) || game.waiting_for_flip_back do
       #other player should play
       game
     else
@@ -106,18 +106,19 @@ defmodule Memory.Game do
     updated_game = Map.put(game, :selected, nil)
 
     if (val1 == val2) do
+#      TODO change to lambda with update
+#      Something in code is resetting score to 0
+      plyr = Map.put(plyr, :score, plyr.score + 1)
+
       updated_board = List.replace_at(board, index, {val1, :matched})
       updated_board = List.replace_at(updated_board, index1, {val2, :matched})
       Map.put(updated_game, :board, updated_board)
       |> Map.update(:players, %{}, &(Map.put(&1, player, plyr)))
     else
       updated_board = List.replace_at(board, index, {val1, :selected})
-
-      plyr = Map.update(plyr, :score, 0, fn val -> val + 1 end)
-
       Map.put(updated_game, :board, updated_board)
       |> Map.update(:players, %{}, &(Map.put(&1, player, plyr)))
-      |> Map.put(:waitng_for_flip_back, true)
+      |> Map.put(:waiting_for_flip_back, true)
     end
   end
 
@@ -138,7 +139,7 @@ defmodule Memory.Game do
 
     Map.put(game, :board, updated_board)
     |> Map.update(:players, %{}, &(Map.put(&1, player, plyr)))
-    |> Map.put(:waitng_for_flip_back, false)
+    |> Map.put(:waiting_for_flip_back, false)
   end
 
   defp game_won?(board) do

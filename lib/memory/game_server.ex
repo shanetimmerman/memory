@@ -18,10 +18,6 @@ defmodule Memory.GameServer do
     GenServer.call(__MODULE__, {:reset, game, user})
   end
 
-  def flip_back(game, user) do
-    Process.send_after(self(), {:flip_back, game, user}, 1000)
-  end
-
   # Server (callbacks)
   ## Implementations
 
@@ -38,7 +34,7 @@ defmodule Memory.GameServer do
     gg = Map.get(state, game, Game.new)
          |> Game.click(user, index)
 
-    if gg.need_flip_back do
+    if gg.waiting_for_flip_back do
       Process.send_after(self(), {:flip_back, game, user}, 1000)
     end
 
