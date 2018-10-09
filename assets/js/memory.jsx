@@ -68,7 +68,6 @@ class Memory extends React.Component {
     sendClick(index) {
         if (this.interactable) {
             this.channel.push("click", { index: index });
-                // .receive("ok", this.gotClickResult.bind(this));
         }
     }
 

@@ -38,7 +38,7 @@ defmodule Memory.GameServer do
     gg = Map.get(state, game, Game.new)
          |> Game.click(user, index)
 
-    if (gg[:need_flip_back] == true) do
+    if gg.need_flip_back do
       Process.send_after(self(), {:flip_back, game, user}, 1000)
     end
 
