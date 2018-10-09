@@ -20,15 +20,11 @@ import index_init from "./index_base";
 function start() {
     // Based on class notes for hangman (https://github.com/NatTuck/hangman)
     let root = document.getElementById('root');
-    let index_base = document.getElementById('index_base');
     if (root) {
-        socket.connect()
+        socket.connect();
         let channel = socket.channel("games:" + window.gameName, {});
 
         game_init(root, channel);
-    } else if (index_base) {
-
-        index_init(index_base);
     }
 }
 

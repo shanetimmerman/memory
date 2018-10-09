@@ -10,16 +10,16 @@ defmodule Memory.GameServer do
     GenServer.call(__MODULE__, {:view, game, user})
   end
 
-  def flip_back(game, user) do
-    GenServer.call(__MODULE__, {:flip_back, game, user})
-  end
-
   def click(game, user, index) do
     GenServer.call(__MODULE__, {:click, game, user, index})
   end
 
   def reset(game, user) do
     GenServer.call(__MODULE__, {:reset, game, user})
+  end
+
+  def flip_back(game, user) do
+    Process.send_after(self(), {:flip_back, game, user}, 1000)
   end
 
   # Server (callbacks)
@@ -37,13 +37,20 @@ defmodule Memory.GameServer do
   def handle_call({:click, game, user, index}, _from, state) do
     gg = Map.get(state, game, Game.new)
          |> Game.click(user, index)
+
+    if (gg[:need_flip_back] == true) do
+      Process.send_after(self(), {:flip_back, game, user}, 1000)
+    end
+
     {:reply, Game.client_view(gg, user), Map.put(state, game, gg)}
   end
 
-  def handle_call({:flip_back, game, user}, _from, state) do
+  def handle_info({:flip_back, game, user}, state) do
     gg = Map.get(state, game, Game.new)
          |> Game.flip_back(user)
-    {:reply, Game.client_view(gg, user), Map.put(state, game, gg)}
+    view = Game.client_view(gg, user)
+    MemoryWeb.Endpoint.broadcast("games:" <> game, "update_state", view)
+    {:noreply, Map.put(state, game, gg)}
   end
 
   def handle_call({:reset, game, user}, _from, state) do

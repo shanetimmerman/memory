@@ -42,6 +42,13 @@ class Memory extends React.Component {
         this.channel.join()
             .receive("ok", this.updateView.bind(this))
             .receive("error", resp => { console.log("Unable to join", resp) });
+
+        this.channel.on("update_state", (state) => {
+            console.log(state);
+            if (state !== undefined) {
+                this.setState(state);
+            }
+        });
     }
 
     /**
@@ -54,32 +61,14 @@ class Memory extends React.Component {
     }
 
     /**
-     * Before updating the view, checks if any cards need to be flipped back
-     * If any do, sets them to be flipped back after 1 second
-     *
-     * @param view: updated view to display
-     */
-    gotClickResult(view) {
-        this.updateView(view);
-        if (view.game.need_flip_back) {
-
-            this.interactable = false;
-            setTimeout(() => {
-                this.sendFlipBack();
-                this.interactable = true;
-            }, 1000);
-        }
-    }
-
-    /**
      * On click, sends the server the index of the tile and updates
      * view based on the result
      * @param index: Tile index
      */
     sendClick(index) {
         if (this.interactable) {
-            this.channel.push("click", { index: index })
-                .receive("ok", this.gotClickResult.bind(this));
+            this.channel.push("click", { index: index });
+                // .receive("ok", this.gotClickResult.bind(this));
         }
     }
 
@@ -90,15 +79,7 @@ class Memory extends React.Component {
         this.channel.push("reset")
             .receive("ok", this.updateView.bind(this));
     }
-
-    /**
-     * Sends message to flip over selected tiles
-     */
-    sendFlipBack() {
-        this.channel.push("flip_back")
-            .receive("ok", this.updateView.bind(this));
-    }
-
+    
     /**
      * Renders the memory game
      * @returns {*}

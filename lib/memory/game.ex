@@ -5,6 +5,7 @@ defmodule Memory.Game do
       selected: nil,
       score: 0,
       players: %{},
+      need_flip_back: false,
     }
   end
 
@@ -33,7 +34,6 @@ defmodule Memory.Game do
       board: display_board,
       score: game.score,
       game_won: game_won?(bd),
-      need_flip_back: !game.selected && flip_back?(bd),
       players: players,
     }
   end
@@ -50,7 +50,7 @@ defmodule Memory.Game do
   end
 
   def click(game, player, index) do
-    if is_not_turn(game, player) do
+    if is_not_turn(game, player) || waiting_for_flip_back?(game) do
       #other player should play
       game
     else
@@ -114,6 +114,7 @@ defmodule Memory.Game do
       updated_board = List.replace_at(board, index, {val1, :selected})
       Map.put(updated_game, :board, updated_board)
       |> Map.update(:players, %{}, &(Map.put(&1, player, plyr)))
+      |> Map.put(:need_flip_back, true)
     end
   end
 
@@ -134,6 +135,7 @@ defmodule Memory.Game do
 
     Map.put(game, :board, updated_board)
     |> Map.update(:players, %{}, &(Map.put(&1, player, plyr)))
+    |> Map.put(:need_flip_back, false)
   end
 
   defp game_won?(board) do
@@ -150,6 +152,10 @@ defmodule Memory.Game do
 
   defp hide?(val, status) do
     {val, status}
+  end
+
+  def waiting_for_flip_back?(game) do
+    game[:need_flip_back]
   end
 
   def random_board() do
