@@ -38,10 +38,19 @@ defmodule Memory.Game do
     %{
       board: display_board,
       score: game.score,
-      game_won: game_won?(bd),
+      game_over: game_won?(bd),
       players: players,
       current_turn: current_turn,
     }
+  end
+
+  def join(game, user) do
+    valid_players = Map.keys(game.players)
+    if Kernel.length(valid_players) <= 2 && !Map.has_key?(game.players, user) do
+      Map.update(game, :players, {}, &(Map.put(&1, user, init_player())))
+    else
+      game
+    end
   end
 
   def hide_value({value, state}) do
@@ -78,7 +87,7 @@ defmodule Memory.Game do
 
   def is_not_playing(game, user) do
     valid_players = Map.keys(game.players)
-    Kernel.length(valid_players) >= 2 && !Map.has_key?(game.players, user)
+    Kernel.length(valid_players) != 2 || !Map.has_key?(game.players, user)
   end
 
   defp first_click(game, player, index) do
@@ -108,6 +117,7 @@ defmodule Memory.Game do
     {val2, _} = Enum.at(board, index1)
 
     updated_game = Map.put(game, :selected, nil)
+                   |> Map.put(:last_turn, player)
 
     if (val1 == val2) do
 #      TODO change to lambda with update
@@ -128,10 +138,10 @@ defmodule Memory.Game do
 
 
   def reset(game, player) do
-    # restarted = Map.put(game, :selected, nil)
-    # restarted = Map.put(restarted, :score, 0)
-    # Map.put(restarted, :board, random_board())
-    new()
+     restarted = Map.put(game, :selected, nil)
+     restarted = Map.put(restarted, :score, 0)
+     Map.put(restarted, :board, random_board())
+#    new()
   end
 
   def flip_back(game, player) do
@@ -143,7 +153,6 @@ defmodule Memory.Game do
     Map.put(game, :board, updated_board)
     |> Map.update(:players, %{}, &(Map.put(&1, player, plyr)))
     |> Map.put(:waiting_for_flip_back, false)
-    |> Map.put(:last_turn, player)
   end
 
   defp game_won?(board) do

@@ -28,7 +28,7 @@ class Memory extends React.Component {
             // Number of tiles clicked
             score: 0,
 
-            game_won: false,
+            game_over: false,
 
             players: [],
 
@@ -43,6 +43,8 @@ class Memory extends React.Component {
         this.channel.join()
             .receive("ok", this.updateView.bind(this))
             .receive("error", resp => { console.log("Unable to join", resp) });
+
+        this.channel.push("player_join");
 
         this.channel.on("update_state", (state) => {
             console.log(state);
@@ -74,8 +76,11 @@ class Memory extends React.Component {
      * Resests the game on the server
      */
     sendReset() {
-        this.channel.push("reset")
-            .receive("ok", this.updateView.bind(this));
+        this.channel.push("reset");
+    }
+
+    winning_player() {
+        return this.state.players.reduce((a, b) => a["score"] > b["score"] ? a : b)["name"];
     }
     
     /**
@@ -84,9 +89,9 @@ class Memory extends React.Component {
      */
     render() {
         // Generate the list of tiles
-        if (this.state.game_won) {
+        if (this.state.game_over) {
             return <div className="column">
-                <h2>You Won in {this.state.score} clicks</h2>
+                <h2>Player { this.winning_player() } Won!</h2>
                 <img id="blerner"
                      src="https://www.ccis.northeastern.edu/wp-content/uploads/2016/02/Benjamin-Lerner-index-image-e1456779237510.jpg" />
                 <div className="row">
@@ -94,6 +99,7 @@ class Memory extends React.Component {
                 </div>
             </div>
         } else {
+
             let player_info = [];
             let player;
             for (player in this.state.players) {
@@ -106,6 +112,8 @@ class Memory extends React.Component {
             } else {
                 turn_announcement = <h3>User {this.state.current_turn}'s turn</h3>
             }
+
+
             return <div className="column">
                 { turn_announcement }
                 <Board

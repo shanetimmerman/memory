@@ -17,6 +17,12 @@ defmodule MemoryWeb.GamesChannel do
     end
   end
 
+  def handle_in("player_join", _, socket) do
+    view = GameServer.player_join(socket.assigns[:game], socket.assigns[:user])
+    broadcast(socket, "update_state", view)
+    {:noreply, socket}
+  end
+
   def handle_in("click", %{"index" => index}, socket) do
     view = GameServer.click(socket.assigns[:game], socket.assigns[:user], index)
 
@@ -24,7 +30,6 @@ defmodule MemoryWeb.GamesChannel do
 
     broadcast(socket, "update_state", view)
     {:noreply, socket}
-
   end
 
   def handle_in("reset", _, socket) do
