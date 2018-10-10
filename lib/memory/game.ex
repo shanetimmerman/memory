@@ -1,4 +1,5 @@
 defmodule Memory.Game do
+#  Create a new memory game
   def new do
     %{
       board: random_board(),
@@ -12,13 +13,7 @@ defmodule Memory.Game do
     }
   end
 
-  def new(players) do
-    players = Enum.map players , fn {name, vals} -> 
-      {name, %{ init_player() | score:  vals.score || 0}}
-    end
-    Map.put(new(), :players, Enum.into(players, %{}))
-  end
-
+#  Initializes a player
   def init_player() do
     %{
       score: 0,
@@ -26,6 +21,7 @@ defmodule Memory.Game do
     }
   end
 
+#  Gets the view of the game to pipe to the front end
   def client_view(game, user) do
     bd = game.board
     display_board = Enum.map(bd, fn x -> hide_value(x) end)
@@ -44,6 +40,9 @@ defmodule Memory.Game do
     }
   end
 
+#  Registers a user for the game:
+#  NOTE: Only two users can register for any game
+#  This function prevents > 2 players per game & duplication of players
   def join(game, user) do
     valid_players = Map.keys(game.players)
     if Kernel.length(valid_players) < 2 && !Map.has_key?(game.players, user) do
@@ -53,7 +52,8 @@ defmodule Memory.Game do
     end
   end
 
-  def hide_value({value, state}) do
+#  Function for client view to hidden tiles
+  defp hide_value({value, state}) do
     case state do
       :hidden ->
         %{"value" => "?", "state" => 0}
@@ -64,9 +64,11 @@ defmodule Memory.Game do
     end
   end
 
+#  Handles user click on memory tile
   def click(game, player, index) do
-    if is_not_playing(game, player) || is_not_turn(game, player) || game.waiting_for_flip_back do
-      #other player should play
+    if is_not_playing(game, player)
+       || is_not_turn(game, player)
+       || game.waiting_for_flip_back do
       game
     else
       updated_game = Map.put(game, :score, game.score + 1)
@@ -80,16 +82,18 @@ defmodule Memory.Game do
     end
   end
 
-  def is_not_turn(game , user) do
-#    false
+#  Is it not the given user's turn
+  defp is_not_turn(game , user) do
     game.last_turn == user
   end
 
-  def is_not_playing(game, user) do
+#  Is the given user registered for the game
+  defp is_not_playing(game, user) do
     valid_players = Map.keys(game.players)
     Kernel.length(valid_players) != 2 || !Map.has_key?(game.players, user)
   end
 
+#  Handles the first click
   defp first_click(game, player, index) do
     {val, _} = Enum.at(game.board, index)
     plyr = Map.get(game.players, player)
@@ -101,6 +105,7 @@ defmodule Memory.Game do
     |> Map.update(:players, %{}, &(Map.put(&1, player, plyr)))
   end
 
+#  Handles the second click
   defp second_click(game, player, index) do
     board = game.board
     index1 = game.selected
@@ -129,14 +134,16 @@ defmodule Memory.Game do
     end
   end
 
-
+# Resets the board
   def reset(game, player) do
-#     restarted = Map.put(game, :selected, nil)
-#     restarted = Map.put(restarted, :score, 0)
-#     Map.put(restarted, :board, random_board())
-    new()
+    if !is_not_player(game, player) do
+      new()
+    else
+      game
+    end
   end
 
+#  Flips back all tiles marked as selected
   def flip_back(game, player) do
     board = game.board
     updated_board = Enum.map(board, fn {val, status} -> hide?(val, status) end)
@@ -148,22 +155,22 @@ defmodule Memory.Game do
     |> Map.put(:waiting_for_flip_back, false)
   end
 
+#  Determines if all tiles are matched
   defp game_won?(board) do
     Enum.all?(board, fn {_, status} -> (status == :matched) end)
   end
 
-  def flip_back?(board) do
-    Enum.any?(board, fn {_, status} -> (status == :selected) end)
-  end
-
+#  Changes selected tile to hidden
   defp hide?(val, :selected) do
     {val, :hidden}
   end
 
+#  Leaves all hidden and matched tiles unchanged
   defp hide?(val, status) do
     {val, status}
   end
 
+#  Generates a random game board
   def random_board() do
     li = Enum.to_list(1..8)
     vals = Enum.map(li, fn x -> {x, :hidden} end)
