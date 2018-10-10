@@ -29,10 +29,11 @@ class Memory extends React.Component {
             score: 0,
 
             game_won: false,
-            players: [],
-        };
 
-        this.interactable = true;
+            players: [],
+
+            current_turn: undefined,
+        };
 
         // Channel interactions and functions piping information inspired by in class hangman examples
         // (https://github.com/NatTuck/hangman)
@@ -66,9 +67,7 @@ class Memory extends React.Component {
      * @param index: Tile index
      */
     sendClick(index) {
-        if (this.interactable) {
-            this.channel.push("click", { index: index });
-        }
+        this.channel.push("click", { index: index });
     }
 
     /**
@@ -95,13 +94,29 @@ class Memory extends React.Component {
                 </div>
             </div>
         } else {
+            let player_info = [];
+            let player;
+            for (player in this.state.players) {
+                player_info.push(<p key={"player" + player}>Score { this.state.players[player]["name"] }: { this.state.players[player]["score"] }</p>);
+            }
+
+            let turn_announcement;
+            if (this.state.current_turn === window.userName) {
+                turn_announcement = <h3>Your Turn</h3>
+            } else {
+                turn_announcement = <h3>User {this.state.current_turn}'s turn</h3>
+            }
             return <div className="column">
+                { turn_announcement }
                 <Board
                     board={ this.state.board }
                     handleClick={ this.sendClick.bind(this) }
                     key="gameBoard"/>
                 <div className="row">
-                    <p id="score-text">Score: { this.state.score }</p>
+                    { player_info }
+                </div>
+                <div className="row">
+                    <p id="score-text">Total Clicks: { this.state.score }</p>
                     <button onClick={ this.sendReset.bind(this) }>Restart Game</button>
                 </div>
             </div>
