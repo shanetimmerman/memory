@@ -82,6 +82,15 @@ class Memory extends React.Component {
     winning_player() {
         return this.state.players.reduce((a, b) => a["score"] > b["score"] ? a : b)["name"];
     }
+
+    render_user_info() {
+        let user = window.userName;
+        if (this.state.players.some((x) => x["name"] === user + "")) {
+            return <h2>Playing as: {user}</h2>
+        } else {
+            return <h2>Spectating</h2>
+        }
+    }
     
     /**
      * Renders the memory game
@@ -97,6 +106,7 @@ class Memory extends React.Component {
 
     render_win() {
         return <div className="column">
+            { this.render_user_info() }
             <h2>Player { this.winning_player() } Won!</h2>
             <img id="blerner"
                  src="https://www.ccis.northeastern.edu/wp-content/uploads/2016/02/Benjamin-Lerner-index-image-e1456779237510.jpg" />
@@ -125,6 +135,7 @@ class Memory extends React.Component {
 
 
         return <div className="column">
+            { this.render_user_info() }
             { turn_announcement }
             <Board
                 board={ this.state.board }

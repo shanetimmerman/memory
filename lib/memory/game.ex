@@ -46,7 +46,7 @@ defmodule Memory.Game do
 
   def join(game, user) do
     valid_players = Map.keys(game.players)
-    if Kernel.length(valid_players) <= 2 && !Map.has_key?(game.players, user) do
+    if Kernel.length(valid_players) < 2 && !Map.has_key?(game.players, user) do
       Map.update(game, :players, {}, &(Map.put(&1, user, init_player())))
     else
       game
@@ -86,9 +86,8 @@ defmodule Memory.Game do
   end
 
   def is_not_playing(game, user) do
-#    valid_players = Map.keys(game.players)
-#    Kernel.length(valid_players) != 2 || !Map.has_key?(game.players, user)
-    false
+    valid_players = Map.keys(game.players)
+    Kernel.length(valid_players) != 2 || !Map.has_key?(game.players, user)
   end
 
   defp first_click(game, player, index) do
