@@ -44,8 +44,6 @@ class Memory extends React.Component {
             .receive("ok", this.updateView.bind(this))
             .receive("error", resp => { console.log("Unable to join", resp) });
 
-        this.channel.push("player_join");
-
         this.channel.on("update_state", (state) => {
             console.log(state);
             if (state !== undefined) {
@@ -97,10 +95,13 @@ class Memory extends React.Component {
      * @returns {*}
      */
     render() {
-        if (this.state.game_over) {
-            return this.render_win()
+        if (this.state.players.length < 2) {
+            return this.render_lobby();
+        }
+        else if (this.state.game_over) {
+            return this.render_win();
         } else {
-            return this.render_ongoing()
+            return this.render_ongoing();
         }
     }
 
@@ -114,6 +115,27 @@ class Memory extends React.Component {
                 <button onClick={ this.sendReset.bind(this) }>Restart Game</button>
             </div>
         </div>
+    }
+
+    render_lobby() {
+        let player_announcement;
+        if (this.state.players.length === 1) {
+            player_announcement = <div>
+                <h3>Player {this.state.players[0]["name"]} has joined</h3>
+                <h3>Waiting for Additional Players...</h3>
+            </div>
+        } else {
+            player_announcement = <h3>Waiting for Players to join...</h3>
+        }
+        return <div>
+            <h2>Game Lobby</h2>
+            <h3> User name: {window.userName}</h3>
+            { player_announcement }
+            {(this.state.players.length !== 1 || this.state.players[0]["name"] !== window.userName) &&
+                <button onClick={() => this.channel.push("player_join")}>Join Game</button>}
+        </div>
+
+
     }
 
     render_ongoing() {

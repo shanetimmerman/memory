@@ -81,8 +81,8 @@ defmodule Memory.Game do
   end
 
   def is_not_turn(game , user) do
-    false
-#    game.last_turn == user
+#    false
+    game.last_turn == user
   end
 
   def is_not_playing(game, user) do
@@ -91,11 +91,6 @@ defmodule Memory.Game do
   end
 
   defp first_click(game, player, index) do
-    # %{
-    #   score: 0,
-    #   flips: MapSet.new(),
-    #   turn: nil,
-    # }
     {val, _} = Enum.at(game.board, index)
     plyr = Map.get(game.players, player)
     |> Map.update(:flips, MapSet.new(), &(MapSet.put(&1, index)))
@@ -120,8 +115,6 @@ defmodule Memory.Game do
                    |> Map.put(:last_turn, player)
 
     if (val1 == val2) do
-#      TODO change to lambda with update
-#      Something in code is resetting score to 0
       plyr = Map.put(plyr, :score, plyr.score + 1)
 
       updated_board = List.replace_at(board, index, {val1, :matched})
