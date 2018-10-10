@@ -98,7 +98,7 @@ defmodule Memory.Game do
     #   turn: nil,
     # }
     {val, _} = Enum.at(game.board, index)
-    plyr = Map.get(game, player, init_player())
+    plyr = Map.get(game.players, player)
     |> Map.update(:flips, MapSet.new(), &(MapSet.put(&1, index)))
 
     updated_board = List.replace_at(game.board, index, {val, :selected})
@@ -111,7 +111,7 @@ defmodule Memory.Game do
     board = game.board
     index1 = game.selected
 
-    plyr = Map.get(game, player, init_player())
+    plyr = Map.get(game.players, player)
     |> Map.update(:flips, MapSet.new(), &(MapSet.put(&1, index)))
 
     {val1, _} = Enum.at(board, index)
