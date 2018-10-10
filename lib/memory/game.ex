@@ -86,8 +86,9 @@ defmodule Memory.Game do
   end
 
   def is_not_playing(game, user) do
-    valid_players = Map.keys(game.players)
-    Kernel.length(valid_players) != 2 || !Map.has_key?(game.players, user)
+#    valid_players = Map.keys(game.players)
+#    Kernel.length(valid_players) != 2 || !Map.has_key?(game.players, user)
+    false
   end
 
   defp first_click(game, player, index) do
@@ -138,10 +139,10 @@ defmodule Memory.Game do
 
 
   def reset(game, player) do
-     restarted = Map.put(game, :selected, nil)
-     restarted = Map.put(restarted, :score, 0)
-     Map.put(restarted, :board, random_board())
-#    new()
+#     restarted = Map.put(game, :selected, nil)
+#     restarted = Map.put(restarted, :score, 0)
+#     Map.put(restarted, :board, random_board())
+    new()
   end
 
   def flip_back(game, player) do
