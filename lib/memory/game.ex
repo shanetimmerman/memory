@@ -79,7 +79,6 @@ defmodule Memory.Game do
   def is_not_playing(game, user) do
     valid_players = Map.keys(game.players)
     Kernel.length(valid_players) >= 2 && !Map.has_key?(game.players, user)
-    false
   end
 
   defp first_click(game, player, index) do
