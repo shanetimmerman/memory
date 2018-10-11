@@ -136,7 +136,11 @@ defmodule Memory.Game do
 
 # Resets the board
   def reset(game, player) do
-    new()
+    if is_not_playing(game, player) do
+      game
+    else 
+      new()
+    end
   end
 
 #  Flips back all tiles marked as selected
