@@ -7,8 +7,6 @@ defmodule Memory.Game do
       score: 0,
       players: %{},
       waiting_for_flip_back: false,
-#    TODO change state from tracking last turn to tracking current turn
-#    Requires use to preload the two players
       last_turn: nil
     }
   end
@@ -17,7 +15,6 @@ defmodule Memory.Game do
   def init_player() do
     %{
       score: 0,
-      flips: MapSet.new(),
     }
   end
 
@@ -26,7 +23,7 @@ defmodule Memory.Game do
     bd = game.board
     display_board = Enum.map(bd, fn x -> hide_value(x) end)
     players = Enum.map game.players, fn {player_name, player} ->
-      %{ name: player_name, flips: Enum.into(player.flips, []), score: player.score }
+      %{ name: player_name, score: player.score }
     end
 
     current_turn = Enum.at(Enum.filter(Map.keys(game.players), &(&1 != game.last_turn)), 0)
@@ -47,6 +44,7 @@ defmodule Memory.Game do
     valid_players = Map.keys(game.players)
     if Kernel.length(valid_players) < 2 && !Map.has_key?(game.players, user) do
       Map.update(game, :players, {}, &(Map.put(&1, user, init_player())))
+      |> Map.put(:last_turn, user)
     else
       game
     end
@@ -97,7 +95,6 @@ defmodule Memory.Game do
   defp first_click(game, player, index) do
     {val, _} = Enum.at(game.board, index)
     plyr = Map.get(game.players, player)
-    |> Map.update(:flips, MapSet.new(), &(MapSet.put(&1, index)))
 
     updated_board = List.replace_at(game.board, index, {val, :selected})
     updated_game = Map.put(game, :board, updated_board)
@@ -111,7 +108,6 @@ defmodule Memory.Game do
     index1 = game.selected
 
     plyr = Map.get(game.players, player)
-    |> Map.update(:flips, MapSet.new(), &(MapSet.put(&1, index)))
 
     {val1, _} = Enum.at(board, index)
     {val2, _} = Enum.at(board, index1)

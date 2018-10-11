@@ -46,8 +46,12 @@
     transform: translate(-0%, -0%);
 }
 
+.player_info {
+    padding-left: 20px;
+}
+
 #score-text{
-    width: 80px;
+    width: 200px;
 }
 
 #blerner {
