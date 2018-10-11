@@ -175,16 +175,43 @@ class Memory extends React.Component {
      */
     render_ongoing() {
         let player_info = [];
-        let player;
-        for (player in this.state.players) {
-            player_info.push(<div className="row">
+        
+        // let player;
+        // for (player in this.state.players) {
+        player_info.push(<div className="row">
+            <div className="column"><table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                      <td>{this.state.players[0]["name"]}</td>
+                      <td>{this.state.players[0]["score"]}</td>
+                    </tr>
+                    <tr>
+                      <td>{this.state.players[1]["name"]}</td>
+                      <td>{this.state.players[1]["score"]}</td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+            <div className="column"></div>
+            </div>);
+        // }
+                    /* <div className="row">
+            <div className="column">
                 <h4 className="player_info">User:</h4>
                 <h4 className="player_info">{this.state.players[player]["name"]}</h4>
+            </div>
+            <div className="column">
                 <h4 className="player_info">Score:</h4>
                 <h4 className="player_info">{ this.state.players[player]["score"] }
                 </h4>
-            </div>);
-        }
+            </div>
+            </div> */
 
         let turn_announcement;
         if (this.state.players.length !== 2) {
