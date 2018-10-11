@@ -45,10 +45,7 @@ class Memory extends React.Component {
             .receive("error", resp => { console.log("Unable to join", resp) });
 
         this.channel.on("update_state", (state) => {
-            console.log(state);
-            if (state !== undefined) {
-                this.setState(state);
-            }
+            this.setState(state);
         });
     }
 
@@ -180,8 +177,13 @@ class Memory extends React.Component {
         let player_info = [];
         let player;
         for (player in this.state.players) {
-            player_info.push(<p key={"player" + player}>
-                Score { this.state.players[player]["name"] }: { this.state.players[player]["score"] }</p>);
+            player_info.push(<div className="row">
+                <h4 className="player_info">User:</h4>
+                <h4 className="player_info">{this.state.players[player]["name"]}</h4>
+                <h4 className="player_info">Score:</h4>
+                <h4 className="player_info">{ this.state.players[player]["score"] }
+                </h4>
+            </div>);
         }
 
         let turn_announcement;
@@ -201,11 +203,9 @@ class Memory extends React.Component {
                 board={ this.state.board }
                 handleClick={ this.sendClick.bind(this) }
                 key="gameBoard"/>
-            <div className="row">
+            <div className="column">
                 { player_info }
-            </div>
-            <div className="row">
-                <p id="score-text">Total Clicks: { this.state.score }</p>
+                <h4 id="score-text">Total Clicks: { this.state.score }</h4>
                 <button onClick={ this.sendReset.bind(this) }>Restart Game</button>
             </div>
         </div>
