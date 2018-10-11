@@ -77,10 +77,35 @@ class Memory extends React.Component {
         this.channel.push("reset");
     }
 
-    winning_player() {
-        return this.state.players.reduce((a, b) => a["score"] > b["score"] ? a : b)["name"];
+    /**
+     * Renders the appropriate text depending on game outcome
+     * @returns {*}
+     */
+    render_winner() {
+        if (this.state.players[0]["score"] === this.state.players[1]["score"]) {
+            return <h2>Game is tied</h2>
+        } else {
+            let winner = this.state.players.reduce((a, b) => a["score"] > b["score"] ? a : b)["name"];
+            return <div>
+                <h2>{ winner }  wins!</h2>
+            </div>
+        }
     }
 
+    /**
+     * Renders the final score of the game
+     * @returns {*}
+     */
+    render_final_score() {
+        let s1 = this.state.players[0]["score"];
+        let s2 = this.state.players[1]["score"];
+        return <h3>Final score - { s1 } : { s2 }</h3>
+    }
+
+    /**
+     * Render player name if the player is playing, else Spectating
+     * @returns {*}
+     */
     render_user_info() {
         let user = window.userName;
         if (this.state.players.some((x) => x["name"] === user + "")) {
@@ -105,10 +130,15 @@ class Memory extends React.Component {
         }
     }
 
+    /**
+     * Renders the winning game screen
+     * @returns {*}
+     */
     render_win() {
         return <div className="column">
             { this.render_user_info() }
-            <h2>Player { this.winning_player() } Won!</h2>
+            { this.render_winner() }
+            { this.render_final_score() }
             <img id="blerner"
                  src="https://www.ccis.northeastern.edu/wp-content/uploads/2016/02/Benjamin-Lerner-index-image-e1456779237510.jpg" />
             <div className="row">
@@ -117,6 +147,10 @@ class Memory extends React.Component {
         </div>
     }
 
+    /**
+     * Renders the game lobby screen
+     * @returns {*}
+     */
     render_lobby() {
         let player_announcement;
         if (this.state.players.length === 1) {
@@ -138,6 +172,10 @@ class Memory extends React.Component {
 
     }
 
+    /**
+     * Renders an in progress game
+     * @returns {*}
+     */
     render_ongoing() {
         let player_info = [];
         let player;
