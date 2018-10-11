@@ -1,11 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import _ from 'lodash';
-
 import css from "../css/memory.css";
 
-export default function game_init(root) {
-    ReactDOM.render(<Memory/>, root);
+export default function game_init(root, channel) {
+    ReactDOM.render(<Memory channel={ channel } />, root);
 }
 
 /**
@@ -15,7 +13,7 @@ export default function game_init(root) {
  */
 class Memory extends React.Component {
     /**
-     * Cunstructs the react component for game_init
+     * Constructs the react component for game_init
      *
      * Initializes list of tile
      * @param props
@@ -23,169 +21,221 @@ class Memory extends React.Component {
     constructor(props) {
         super(props);
 
-        // Maes a list of
-        let zeroToSeven = [...Array(8).keys()];
-        let list_of_pairs = zeroToSeven.concat(zeroToSeven);
-        let shuffled = _.shuffle(list_of_pairs);
-        let shuffled_tiles = shuffled.map((value) =>
-          {return { value: value, visible: false, matched: false }})
-
         this.state = {
             // Represents the board state
-            board: shuffled_tiles,
+            board: [],
 
             // Number of tiles clicked
             score: 0,
 
-            // Temporary store for index of the first clicked tile
-            // in the data array.
-            firstClicked: null,
+            game_over: false,
 
-            // Stores if game has been won
-            gameWon: false,
+            players: [],
 
-            // When true, interaction with board is halted until set
-            inTimeout: false,
-            // back to false
+            current_turn: undefined,
         };
 
+        // Channel interactions and functions piping information inspired by in class hangman examples
+        // (https://github.com/NatTuck/hangman)
+
+        this.channel = props.channel;
+
+        this.channel.join()
+            .receive("ok", this.updateView.bind(this))
+            .receive("error", resp => { console.log("Unable to join", resp) });
+
+        this.channel.on("update_state", (state) => {
+            this.setState(state);
+        });
     }
 
     /**
-     * Shuffles and hide all tiles, sets score back to 0.
+     * Update the view when the game is updated
+     *
+     * @param view: updated view to display
      */
-    restart() {
-        let shuffled_tiles = _.shuffle(this.state.board);
-        let reset_tiles = shuffled_tiles.map((x) =>
-            {return { value: x.value, visible: false, matched: false }});
-
-        this.setState({ board: reset_tiles,
-                        score: 0,
-                        firstClicked: null,
-                        gameWon: false,
-                     });
+    updateView(view) {
+        this.setState(view.game);
     }
 
-     /**
-      * incrementScore - Incremenents the score
-      *
-      * @return {type}  Void
-      */
-     incrementScore() {
-       this.setState({ score: this.state.score + 1 });
-     }
+    /**
+     * On click, sends the server the index of the tile and updates
+     * view based on the result
+     * @param index: Tile index
+     */
+    sendClick(index) {
+        this.channel.push("click", { index: index });
+    }
 
-     /**
-      * checkMatch - Handles clicks and checking for matches
-      *
-      * Called twice per potential mathing:
-      *   - On first call, shows the clicked tile and stores its index
-      *   - On second call, shows the clicked tile and checks its value vs
-      *       the previously clicked tile's. If they match, check if the game
-      *       has been won. If the don't, wait a bit so the user can see the
-      *       tile values then hide both tiles.
-      *
-      * @param  {type} index index of the clicked tile in this.state.board
-      * @return {type}       Void
-      */
-     checkMatch(index) {
-         // If the game is still displaying the previous selection, then do not
-         // allow the user to select any tiles
-         if (this.state.inTimeout) {
-             return;
-         }
+    /**
+     * Resests the game on the server
+     */
+    sendReset() {
+        this.channel.push("reset");
+    }
 
-         // Bubbles up the click to the Game
-         this.incrementScore();
+    /**
+     * Renders the appropriate text depending on game outcome
+     * @returns {*}
+     */
+    render_winner() {
+        if (this.state.players[0]["score"] === this.state.players[1]["score"]) {
+            return <h2>Game is tied</h2>
+        } else {
+            let winner = this.state.players.reduce((a, b) => a["score"] > b["score"] ? a : b)["name"];
+            return <div>
+                <h2>{ winner }  wins!</h2>
+            </div>
+        }
+    }
 
-         // Makes a copy of the board so we only change this.state by setState
-         let board_copy = this.state.board;
-         let this_click = board_copy[index];
+    /**
+     * Renders the final score of the game
+     * @returns {*}
+     */
+    render_final_score() {
+        let s1 = this.state.players[0]["score"];
+        let s2 = this.state.players[1]["score"];
+        return <h3>Final score - { s1 } : { s2 }</h3>
+    }
 
-         // Sets the most recently clicked tile to be visible
-         this_click.visible = true;
-
-         if (this.state.firstClicked == null) {
-             // If this is the first click, save the index and show the tile
-             this.setState({ board: board_copy, firstClicked: index, });
-         } else {
-             // If this is the second click, show the tile
-             this.setState({ board: board_copy });
-
-             let first_click = board_copy[this.state.firstClicked];
-
-             // Check if both tiles have matching values
-             if (first_click.value == this_click.value) {
-
-                // Set the property of both tiles to have matched be true
-                 first_click.matched = true;
-                 this_click.matched = true;
-                 this.setState({ board: board_copy })
-
-                 this.checkWin();
-
-             } else {
-                 this.setState({ inTimeout: true });
-                 // If the tiles do not match, hide them after 1 seconds,
-                 // and remove the stored first click value.
-                 let hide_tiles = () => {
-                     this_click.visible = false;
-                     first_click.visible = false;
-                     this.setState({ board: board_copy, inTimeout: false });
-                 };
-                 setTimeout(hide_tiles, 1000);
-             }
-             this.setState({ firstClicked: null });
-         }
-     }
-
-
-     /**
-      * checkWin - Checks if all tiles are visible (i.e. all pairs have
-      *            been matched).
-      *
-      * If the game is one, it will display an alert.
-      *
-      * @return {type}  Void
-      */
-     checkWin() {
-         // If they do, check if all tiles are visable
-         if (this.state.board.every((tile) => tile.matched)) {
-             // If they are, alert the uer the won
-             // Delayed as board does not update as fast as the alert
-             // would go off. This allows the user to see all tiles.
-             this.setState({ gameWon: true })
-         }
-     }
-
+    /**
+     * Render player name if the player is playing, else Spectating
+     * @returns {*}
+     */
+    render_user_info() {
+        let user = window.userName;
+        if (this.state.players.some((x) => x["name"] === user + "")) {
+            return <h2>Playing as: {user}</h2>
+        } else {
+            return <h2>Spectating</h2>
+        }
+    }
+    
     /**
      * Renders the memory game
      * @returns {*}
      */
     render() {
-        // Generate the list of tiles
-        if (this.state.gameWon) {
-            return <div className="column">
-                <h1>Memory Game!</h1>
-                <h2>You Won in {this.state.score} clicks</h2>
-                <img id="blerner" src="https://www.ccis.northeastern.edu/wp-content/uploads/2016/02/Benjamin-Lerner-index-image-e1456779237510.jpg" />
-                <div className="row">
-                    <button onClick={ this.restart.bind(this)}>Restart Game</button>
-                </div>
+        if (this.state.players.length < 2) {
+            return this.render_lobby();
+        }
+        else if (this.state.game_over) {
+            return this.render_win();
+        } else {
+            return this.render_ongoing();
+        }
+    }
+
+    /**
+     * Renders the winning game screen
+     * @returns {*}
+     */
+    render_win() {
+        return <div className="column">
+            { this.render_user_info() }
+            { this.render_winner() }
+            { this.render_final_score() }
+            <img id="blerner"
+                 src="https://www.ccis.northeastern.edu/wp-content/uploads/2016/02/Benjamin-Lerner-index-image-e1456779237510.jpg" />
+            <div className="row">
+                <button onClick={ this.sendReset.bind(this) }>Restart Game</button>
+            </div>
+        </div>
+    }
+
+    /**
+     * Renders the game lobby screen
+     * @returns {*}
+     */
+    render_lobby() {
+        let player_announcement;
+        if (this.state.players.length === 1) {
+            player_announcement = <div>
+                <h3>Player {this.state.players[0]["name"]} has joined</h3>
+                <h3>Waiting for Additional Players...</h3>
             </div>
         } else {
-            return <div className="column">
-                <h1>Memory Game!</h1>
-                <Board
-                    board={ this.state.board }
-                    checkMatch={ this.checkMatch.bind(this) }
-                    key="gameBoard"/>
-                <div className="row">
-                    <p id="score-text">Score: { this.state.score }</p>
-                    <button onClick={ this.restart.bind(this) }>Restart Game</button>
-                </div>
-            </div>
+            player_announcement = <h3>Waiting for Players to join...</h3>
         }
+        return <div>
+            <h2>Game Lobby</h2>
+            <h3> User name: {window.userName}</h3>
+            { player_announcement }
+            {(this.state.players.length !== 1 || this.state.players[0]["name"] !== window.userName) &&
+                <button onClick={() => this.channel.push("player_join")}>Join Game</button>}
+        </div>
+
+
+    }
+
+    /**
+     * Renders an in progress game
+     * @returns {*}
+     */
+    render_ongoing() {
+        let player_info = [];
+        
+        // let player;
+        // for (player in this.state.players) {
+        player_info.push(<div className="row">
+            <div className="column"><table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                      <td>{this.state.players[0]["name"]}</td>
+                      <td>{this.state.players[0]["score"]}</td>
+                    </tr>
+                    <tr>
+                      <td>{this.state.players[1]["name"]}</td>
+                      <td>{this.state.players[1]["score"]}</td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+            <div className="column"></div>
+            </div>);
+        // }
+                    /* <div className="row">
+            <div className="column">
+                <h4 className="player_info">User:</h4>
+                <h4 className="player_info">{this.state.players[player]["name"]}</h4>
+            </div>
+            <div className="column">
+                <h4 className="player_info">Score:</h4>
+                <h4 className="player_info">{ this.state.players[player]["score"] }
+                </h4>
+            </div>
+            </div> */
+
+        let turn_announcement;
+        if (this.state.players.length !== 2) {
+            turn_announcement = <h3>Waiting for Additional Players...</h3>
+        } else if (this.state.current_turn === window.userName) {
+            turn_announcement = <h3>Your Turn</h3>
+        } else {
+            turn_announcement = <h3>User {this.state.current_turn}'s turn</h3>
+        }
+
+
+        return <div className="column">
+            { this.render_user_info() }
+            { turn_announcement }
+            <Board
+                board={ this.state.board }
+                handleClick={ this.sendClick.bind(this) }
+                key="gameBoard"/>
+            <div className="column">
+                { player_info }
+                <h4 id="score-text">Total Clicks: { this.state.score }</h4>
+                <button onClick={ this.sendReset.bind(this) }>Restart Game</button>
+            </div>
+        </div>
     }
 }
 
@@ -199,21 +249,19 @@ class Memory extends React.Component {
 function Board(props) {
     // Generates the HTML for a 4 x 4 game board.
     let board = [];
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < props.board.length / 4; i++) {
         let row = [];
 
         for (var k = 0; k < 4; k++) {
             let index = i * 4 + k;
-            let tile = props.board[index]
+            let tile = props.board[index];
             row.push(<Tile value={ tile.value }
-                           visible={ tile.visible }
-                           matched={ tile.matched }
-                           handleClick={ (x) => props.checkMatch(x) }
-                           index={ index }
+                           state ={ tile.state }
+                           handleClick={ () => props.handleClick( index ) }
                            key={ index }/>);
         }
 
-        board.push(<div className="row"> {row}</div>);
+        board.push(<div className="row" key={"row"+i}> {row}</div>);
     }
 
     return <div className="column"> {board} </div>
@@ -227,24 +275,26 @@ function Board(props) {
   * @return {type}       HTML to render for a <Tile />
   */
 function Tile(props) {
+    // A tile's state is either 0 (hidden), 1 (selected)
+    // or 2 (matched
+
     // Converts the internal value to the corresponinding capital letter.
     // Only works if the number of pairs is <= 26.
     let display = String.fromCharCode(97 + props.value);
 
     // If the tile has been revealed, show its value and disable clicking on it
-    if (props.matched) {
-        return <div className="matched tile">
-            <p className="tile-text">{ display }</p>
-        </div>;
-    } else if (props.visible) {
-        return <div className="visible tile">
-            <p className="tile-text">{ display }</p>
-        </div>
-    } else {
-        // Otherwise, hide the value (show a '?') and propogate clicks up to the
-        // handleClick function of the board
-        return <div className="hidden tile" onClick={() => props.handleClick(props.index)}>
-            <p className="hidden-text">?</p>
-        </div>;
+    switch (props.state) {
+        case 0:
+            return <div className="hidden tile" onClick={() => props.handleClick()}>
+                <p className="hidden-text">?</p>
+            </div>;
+        case 1:
+            return <div className="visible tile">
+                <p className="tile-text">{ display }</p>
+            </div>;
+        case 2:
+            return <div className="matched tile">
+                <p className="tile-text">{ display }</p>
+            </div>;
     }
 }

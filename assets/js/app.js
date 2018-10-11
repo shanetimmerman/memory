@@ -10,16 +10,22 @@ import css from "../css/app.css";
 // Import dependencies
 //
 import "phoenix_html";
-import $ from "jquery";
+import $ from 'jquery';
 
-// Import local files
-//
-// Local files can be imported directly using relative paths, for example:
-// import socket from "./socket"
 
+import socket from "./socket";
 import game_init from "./memory";
+import index_init from "./index_base";
 
-$(() => {
-  let root = $('#root')[0];
-  game_init(root);
-});
+function start() {
+    // Based on class notes for hangman (https://github.com/NatTuck/hangman)
+    let root = document.getElementById('root');
+    if (root) {
+        socket.connect();
+        let channel = socket.channel("games:" + window.gameName, {});
+
+        game_init(root, channel);
+    }
+}
+
+$(start);

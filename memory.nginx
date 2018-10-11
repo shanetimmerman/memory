@@ -3,14 +3,14 @@ server {
     listen [::]:80;
 
     # TODO: This should be your server name.
-    server_name memory1.shanetimmerman.net;
+    server_name hw04.shanetimmerman.net;
 
     location / {
-        proxy_pass http://localhost:4791;
+        proxy_pass http://localhost:4792;
     }
 
     location /socket {
-        proxy_pass http://localhost:4791;
+        proxy_pass http://localhost:4792;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";	 	 
